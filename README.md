@@ -1,36 +1,114 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Veyra
 
-## Getting Started
+### Explainable Payment Risk Intelligence & Fraud Investigation Platform
 
-First, run the development server:
+Veyra is a payment-risk intelligence platform designed to help risk and fraud teams detect suspicious activity, understand why an entity is risky, investigate connected entities, identify emerging threat patterns, and simulate potential interventions.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+> **Detect → Explain → Investigate → Simulate → Act**
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## 🚀 Why Veyra?
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Modern payment fraud is rarely limited to a single suspicious transaction or account.
 
-## Learn More
+A seemingly normal customer may be connected to:
 
-To learn more about Next.js, take a look at the following resources:
+- Multiple accounts
+- Shared devices
+- Suspicious beneficiaries
+- Unusual transaction patterns
+- Other high-risk entities
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Looking at each entity independently can hide these relationships.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Veyra approaches the problem from an **entity + network + behavioural intelligence** perspective.
 
-## Deploy on Vercel
+Instead of only asking:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+> "Is this transaction risky?"
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Veyra helps investigators ask:
+
+> "Why is this entity risky, what is it connected to, what pattern is emerging, and what could happen if we intervene?"
+
+---
+
+## 🎯 Problem Statement
+
+Payment-risk teams need to investigate large volumes of transactions and entities while identifying coordinated or unusual behaviour.
+
+Traditional risk workflows can become fragmented across:
+
+- Risk scores
+- Alerts
+- Customer information
+- Network relationships
+- Investigation tools
+- Manual decision-making
+
+Veyra brings these concepts into a single investigation-oriented workflow.
+
+---
+
+## ✨ Key Features
+
+### 1. Risk Intelligence Dashboard
+
+A centralized overview of the payment-risk environment.
+
+It provides visibility into:
+
+- Risk exposure
+- Accounts at risk
+- Active alerts
+- Risk activity trends
+- High-priority threats
+
+---
+
+### 2. Risk Monitor
+
+The Risk Monitor acts as the operational risk control room.
+
+It surfaces suspicious events and helps investigators prioritize activity based on:
+
+- Severity
+- Risk score
+- Affected accounts
+- Devices
+- Potential exposure
+- Detection reasons
+
+---
+
+### 3. Explainable Risk Engine
+
+Veyra calculates risk using multiple signals instead of relying on a single value.
+
+Current signals include:
+
+- Transaction velocity
+- Device sharing
+- Beneficiary concentration
+- Network exposure
+- Behavioural anomalies
+
+Each signal contributes to an overall risk score.
+
+The goal is to make the score understandable rather than treating it as a black box.
+
+---
+
+### 4. Risk Network
+
+Veyra models relationships between entities such as:
+
+```text
+Customer
+   ↓
+Device
+   ↓
+Customer
+   ↓
+Beneficiary
