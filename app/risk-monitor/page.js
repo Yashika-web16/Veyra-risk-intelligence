@@ -82,7 +82,15 @@ export default function RiskMonitor() {
 
         const data = await response.json();
 
-        const mappedEvents = data.results.map((item, index) => {
+        const results = Array.isArray(data?.results)
+        ? data.results
+        : Array.isArray(data?.data?.results)
+          ? data.data.results
+          : Array.isArray(data?.transactions)
+            ? data.transactions
+            : [];
+
+      const mappedEvents = results.map((item, index) => {
           const risk = item.risk;
 
           const exposure = formatCurrency(item.amount);

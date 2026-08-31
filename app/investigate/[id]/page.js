@@ -115,6 +115,11 @@ export default function InvestigationPage() {
   const [loadingSimulation, setLoadingSimulation] = useState(false);
   const [simulationError, setSimulationError] = useState("");
 
+  const [intervention, setIntervention] = useState(null);
+  const [interventionResult, setInterventionResult] = useState(null);
+  const [loadingIntervention, setLoadingIntervention] = useState(false);
+  const [interventionError, setInterventionError] = useState("");
+
   const [networkData, setNetworkData] = useState(null);
   const [loadingNetwork, setLoadingNetwork] = useState(true);
   const [networkError, setNetworkError] = useState(false);
@@ -221,6 +226,57 @@ export default function InvestigationPage() {
       loadNetwork();
     }
   }, [id]);
+
+  async function runIntervention(type) {
+    try {
+      setIntervention(type);
+      setLoadingIntervention(true);
+      setInterventionError("");
+      setInterventionResult(null);
+
+      const exposureValue =
+        Number(
+          String(entity.exposure)
+            .replace("₹", "")
+            .replace(/,/g, "")
+            .replace("L", "")
+            .replace("K", "")
+            .trim()
+        ) *
+        (String(entity.exposure).includes("L") ? 100000 : 1000);
+
+      const response = await fetch("/api/intervention", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          entityId: id,
+          risk: calculatedRisk,
+          connections: entity.connections,
+          exposure: exposureValue,
+          intervention: type,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.error || "Intervention simulation failed."
+        );
+      }
+
+      setInterventionResult(data);
+    } catch (error) {
+      console.error("Intervention error:", error);
+      setInterventionError(
+        error.message || "Unable to simulate intervention."
+      );
+    } finally {
+      setLoadingIntervention(false);
+    }
+  }
 
   async function runRiskSimulation() {
     try {
@@ -1257,6 +1313,348 @@ const rawConnections = useMemo(
               </p>
             </div>
           )}
+        </section>
+
+      
+
+        {/* RISK DECISION TIMELINE */}
+
+        <section className="mt-5 overflow-hidden rounded-2xl border border-white/[0.07] bg-[#090c11]">
+          <div className="border-b border-white/[0.06] px-5 py-5 sm:px-6">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-400/10 bg-emerald-400/5 text-emerald-300">
+                ◎
+              </div>
+
+              <div>
+                <h2 className="text-sm font-semibold text-white">
+                  Risk Decision Timeline
+                </h2>
+
+                <p className="mt-1 text-xs leading-5 text-slate-600">
+                  Evidence contributing to Veyra&apos;s current risk decision
+                  for {entity.name}.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-5 py-6 sm:px-6">
+
+            {[
+              {
+                time: "09:42",
+                title: "Device sharing detected",
+                description:
+                  "Suspicious device relationships increased the entity's network exposure.",
+                impact: "+18",
+              },
+              {
+                time: "09:47",
+                title: "Transaction velocity increased",
+                description:
+                  "Transaction activity deviated from the expected behavioural baseline.",
+                impact: "+14",
+              },
+              {
+                time: "10:03",
+                title: "Beneficiary concentration detected",
+                description:
+                  "A significant proportion of exposure is concentrated around a connected beneficiary.",
+                impact: "+12",
+              },
+              {
+                time: "10:11",
+                title: "Network exposure expanded",
+                description:
+                  `${entity.connections} connected entities are currently associated with this investigation.`,
+                impact: "+16",
+              },
+              {
+                time: "10:18",
+                title: "Behavioural anomaly detected",
+                description:
+                  "Recent activity differs from the entity's historical behavioural pattern.",
+                impact: "+11",
+              },
+            ].map((event, index, events) => (
+              <div key={event.time} className="relative flex gap-4">
+                <div className="flex w-14 shrink-0 flex-col items-center">
+                  <span className="text-[10px] font-medium text-slate-600">
+                    {event.time}
+                  </span>
+
+                  <span
+                    className={`mt-3 h-3 w-3 rounded-full border-2 border-[#090c11] ${
+                      index === events.length - 1
+                        ? "bg-red-400"
+                        : "bg-emerald-400"
+                    }`}
+                  />
+
+                  {index !== events.length - 1 && (
+                    <span className="mt-1 h-full min-h-12 w-px bg-white/[0.07]" />
+                  )}
+                </div>
+
+                <div className="mb-6 flex-1 rounded-xl border border-white/[0.05] bg-[#06080c] p-4">
+                  <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-start">
+                    <div>
+                      <h3 className="text-xs font-semibold text-slate-200">
+                        {event.title}
+                      </h3>
+
+                      <p className="mt-1 max-w-2xl text-[10px] leading-5 text-slate-600">
+                        {event.description}
+                      </p>
+                    </div>
+
+                    <span className="shrink-0 text-[10px] font-semibold text-red-300">
+                      {event.impact} risk
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <div className="mt-2 rounded-xl border border-red-500/10 bg-red-500/[0.035] p-5">
+              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                <div>
+                  <div className="text-[9px] uppercase tracking-widest text-slate-600">
+                    Current decision
+                  </div>
+
+                  <div className="mt-2 text-lg font-semibold text-red-300">
+                    {riskLabel}
+                  </div>
+
+                  <p className="mt-1 text-[10px] text-slate-600">
+                    Veyra&apos;s current calculated risk score for this entity.
+                  </p>
+                </div>
+
+                <div className="text-right">
+                  <div className="text-3xl font-semibold text-white">
+                    {calculatedRisk}
+                    <span className="ml-1 text-xs font-normal text-slate-700">
+                      / 100
+                    </span>
+                  </div>
+
+                  <div className="mt-1 text-[9px] uppercase tracking-widest text-slate-700">
+                    Decision confidence
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* SCENARIO INTERVENTION */}
+
+        <section className="mt-5 overflow-hidden rounded-2xl border border-white/[0.07] bg-[#090c11]">
+          <div className="border-b border-white/[0.06] px-5 py-5 sm:px-6">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-400/10 bg-emerald-400/5 text-emerald-300">
+                ✦
+              </div>
+
+              <div>
+                <h2 className="text-sm font-semibold text-white">
+                  Scenario Intervention
+                </h2>
+
+                <p className="mt-1 text-xs leading-5 text-slate-600">
+                  Test potential investigator actions before taking them.
+                  See how each intervention could change the entity&apos;s
+                  projected risk.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-5 sm:p-6">
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+
+              {[
+                {
+                  key: "block_device",
+                  title: "Block Device",
+                  description: "Disconnect suspicious device relationships.",
+                  icon: "◈",
+                },
+                {
+                  key: "freeze_beneficiary",
+                  title: "Freeze Beneficiary",
+                  description: "Stop exposure through a high-risk beneficiary.",
+                  icon: "◇",
+                },
+                {
+                  key: "reduce_velocity",
+                  title: "Reduce Velocity",
+                  description: "Lower transaction velocity pressure.",
+                  icon: "↓",
+                },
+                {
+                  key: "investigate_network",
+                  title: "Investigate Network",
+                  description: "Deepen analysis of connected entities.",
+                  icon: "⌁",
+                },
+              ].map((item) => {
+                const active = intervention === item.key;
+
+                return (
+                  <button
+                    key={item.key}
+                    onClick={() => runIntervention(item.key)}
+                    disabled={loadingIntervention}
+                    className={`group rounded-xl border p-4 text-left transition ${
+                      active
+                        ? "border-emerald-400/30 bg-emerald-400/[0.06]"
+                        : "border-white/[0.06] bg-[#06080c] hover:border-white/[0.12] hover:bg-white/[0.025]"
+                    } disabled:cursor-not-allowed disabled:opacity-60`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`text-lg ${
+                          active
+                            ? "text-emerald-300"
+                            : "text-slate-500 group-hover:text-slate-300"
+                        }`}
+                      >
+                        {item.icon}
+                      </span>
+
+                      {active && (
+                        <span className="text-[9px] uppercase tracking-widest text-emerald-300">
+                          Selected
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="mt-4 text-xs font-semibold text-slate-200">
+                      {item.title}
+                    </div>
+
+                    <p className="mt-1 text-[10px] leading-5 text-slate-600">
+                      {item.description}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+
+            {loadingIntervention && (
+              <div className="mt-5 rounded-xl border border-white/[0.06] bg-[#06080c] px-5 py-6 text-center">
+                <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-slate-700 border-t-emerald-400" />
+
+                <p className="mt-3 text-xs text-slate-500">
+                  Simulating intervention impact...
+                </p>
+              </div>
+            )}
+
+            {interventionError && (
+              <div className="mt-5 rounded-xl border border-red-500/10 bg-red-500/5 px-5 py-4">
+                <p className="text-xs text-red-300">
+                  {interventionError}
+                </p>
+              </div>
+            )}
+
+            {interventionResult && !loadingIntervention && (
+              <div className="mt-5 rounded-xl border border-emerald-400/10 bg-emerald-400/[0.025] p-5">
+
+                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                  <div>
+                    <div className="text-[10px] uppercase tracking-widest text-emerald-300">
+                      Simulated impact
+                    </div>
+
+                    <div className="mt-1 text-sm font-semibold text-white">
+                      {interventionResult.intervention.label}
+                    </div>
+                  </div>
+
+                  <div className="rounded-full border border-emerald-400/10 bg-emerald-400/5 px-3 py-1.5 text-[10px] text-emerald-300">
+                    Scenario only
+                  </div>
+                </div>
+
+                <div className="mt-5 grid gap-3 md:grid-cols-3">
+
+                  <div className="rounded-xl border border-white/[0.05] bg-[#06080c] p-4">
+                    <div className="text-[9px] uppercase tracking-widest text-slate-600">
+                      Risk score
+                    </div>
+
+                    <div className="mt-3 flex items-end gap-3">
+                      <span className="text-2xl font-semibold text-slate-500">
+                        {interventionResult.before.risk}
+                      </span>
+
+                      <span className="pb-1 text-sm text-slate-700">
+                        →
+                      </span>
+
+                      <span className="text-2xl font-semibold text-emerald-300">
+                        {interventionResult.after.risk}
+                      </span>
+                    </div>
+
+                    <div className="mt-2 text-[10px] text-emerald-300">
+                      −{interventionResult.impact.avoidedRisk} risk points
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-white/[0.05] bg-[#06080c] p-4">
+                    <div className="text-[9px] uppercase tracking-widest text-slate-600">
+                      Network connections
+                    </div>
+
+                    <div className="mt-3 flex items-end gap-3">
+                      <span className="text-2xl font-semibold text-slate-500">
+                        {interventionResult.before.connections}
+                      </span>
+
+                      <span className="pb-1 text-sm text-slate-700">
+                        →
+                      </span>
+
+                      <span className="text-2xl font-semibold text-emerald-300">
+                        {interventionResult.after.connections}
+                      </span>
+                    </div>
+
+                    <div className="mt-2 text-[10px] text-emerald-300">
+                      {interventionResult.impact.connectionReduction > 0
+                        ? `−${interventionResult.impact.connectionReduction} connections`
+                        : "No connection change"}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-white/[0.05] bg-[#06080c] p-4">
+                    <div className="text-[9px] uppercase tracking-widest text-slate-600">
+                      Risk interpretation
+                    </div>
+
+                    <p className="mt-3 text-xs leading-5 text-slate-400">
+                      {interventionResult.message}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 border-t border-white/[0.05] pt-4">
+                  <p className="text-[9px] leading-4 text-slate-700">
+                    {interventionResult.disclaimer}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </section>
 
       </main>
